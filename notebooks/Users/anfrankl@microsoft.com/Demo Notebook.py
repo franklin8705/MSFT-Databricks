@@ -1,7 +1,8 @@
 # Databricks notebook source
-print("Spark Context: ",spark,'\n',
-      "SQL Context: ", sqlContext,'\n'
-     "DBFS Utilities: ", dbutils)
+print("Spark Session: ",spark,'\n',
+      "SQL Context: ", sqlContext,'\n',
+     "DBFS Utilities: ", dbutils, '\n',
+     "Spark Context",sc)
 
 # COMMAND ----------
 
@@ -14,8 +15,7 @@ print("Spark Context: ",spark,'\n',
 # MAGIC %sh
 # MAGIC #Local File Storage
 # MAGIC mkdir /tmp/churn
-# MAGIC wget http://www.sgi.com/tech/mlc/db/churn.data -O /tmp/churn/churn.data 
-# MAGIC wget http://www.sgi.com/tech/mlc/db/churn.test -O /tmp/churn/churn.test
+# MAGIC wget https://community.watsonanalytics.com/wp-content/uploads/2015/03/WA_Fn-UseC_-Telco-Customer-Churn.csv -O /tmp/churn/churn.csv 
 
 # COMMAND ----------
 
@@ -69,8 +69,7 @@ pwd
 # MAGIC %py
 # MAGIC #Create folder in DBFS (Pointer to the specified file)
 # MAGIC dbutils.fs.mkdirs("/mnt/churn")
-# MAGIC dbutils.fs.mv("file:///tmp/churn/churn.data","/mnt/churn/churn.data")
-# MAGIC dbutils.fs.mv("file:///tmp/churn/churn.test","/mnt/churn/churn.test")
+# MAGIC dbutils.fs.mv("file:///tmp/churn/churn.csv","/mnt/churn/churn.data")
 
 # COMMAND ----------
 
@@ -92,48 +91,157 @@ from pyspark.sql.functions import *
 
 # COMMAND ----------
 
-churn_schema =StructType([
-  StructField("state",StringType(), False),
-  StructField("account_length",DoubleType(), False),    
-  StructField("area_code",DoubleType(), False),    
-  StructField("phone_number",StringType(), False), 
-  StructField("international_plan",StringType(), False),  
-  StructField("voice_mail_plan",StringType(), False),    
-  StructField("number_vmail_messages",DoubleType(), False),
-  StructField("total_day_minutes",DoubleType(), False),    
-  StructField("total_day_calls",DoubleType(), False),    
-  StructField("total_day_charge",DoubleType(), False),   
-  StructField("total_eve_minutes",DoubleType(), False),   
-  StructField("total_eve_calls",DoubleType(), False),    
-  StructField("total_eve_charge",DoubleType(), False),   
-  StructField("total_night_minutes",DoubleType(), False), 
-  StructField("total_night_calls",DoubleType(), False),   
-  StructField("total_night_charge",DoubleType(), False),  
-  StructField("total_intl_minutes",DoubleType(), False),  
-  StructField("total_intl_calls",DoubleType(), False),    
-  StructField("total_intl_charge",DoubleType(), False),   
-  StructField("number_customer_service_calls",DoubleType(), False), 
-  StructField("churned",StringType(), False) 
-])
-
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC #### Create initial dataframes
 
 # COMMAND ----------
 
-df = spark.read.option("delimiter",",").option("inferSchema","true").schema(churn_schema).csv("dbfs:/mnt/churn/churn.data")
-
-
-# COMMAND ----------
-
-sparkdf = sqlContext.read.format('csv').load('/mnt/churn/churn.data')
+df = (spark.read.option("delimiter",",").option("inferSchema","true").option("header","true").csv("dbfs:/mnt/churn/churn.data"))
 
 # COMMAND ----------
 
-display(sparkdf)
+#Import Option 2
+#sparkdf = sqlContext.read.format('csv').load('/mnt/churn/churn.data')
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### Display Method in Databricks
+
+# COMMAND ----------
+
+display(df)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Simple Tasks
+# MAGIC - Count Cases
+# MAGIC - Count Churned Cases
+# MAGIC - Count Unchurned
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC #### Python
+
+# COMMAND ----------
+
+#What is df?
+print(type(df) )
+
+#Convert to Pandas DF
+df_py=df.toPandas()
+
+#Use Pandas print method
+df_py.head()
+
+# COMMAND ----------
+
+#Count observations
+df_py.shape[0]
+
+# COMMAND ----------
+
+#Count Cases
+#df_py[df_py['Churn']=='Yes'].shape
+df_py['Churn'].value_counts()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### R
+
+# COMMAND ----------
+
+# MAGIC %r
+# MAGIC #Import SparkR package
+# MAGIC library(SparkR)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### Check what files are available
+
+# COMMAND ----------
+
+# MAGIC %fs
+# MAGIC ls /mnt/churn/
+
+# COMMAND ----------
+
+# MAGIC %r
+# MAGIC 
+# MAGIC #Notice how we R magic is invoked to import the data as a "SparkR" Dataframe
+# MAGIC df_r<-read.df("dbfs:/mnt/churn/churn.data",source="csv",header="true",inferSchema="true")
+
+# COMMAND ----------
+
+# MAGIC %r
+# MAGIC typeof(df_r)
+
+# COMMAND ----------
+
+# MAGIC %r
+# MAGIC df_rl<-collect(df_r)
+
+# COMMAND ----------
+
+# MAGIC %r
+# MAGIC head(df_rl)
+
+# COMMAND ----------
+
+# MAGIC %r
+# MAGIC #Total number of observations
+# MAGIC dim(df_rl)
+
+# COMMAND ----------
+
+# MAGIC %r
+# MAGIC #How many churn cases
+# MAGIC sum(df_rl$Churn=='Yes')
+# MAGIC 
+# MAGIC #note: 
+# MAGIC #sum(df_r$Churn=='Yes')  #does not yield correct results
+
+# COMMAND ----------
+
+# MAGIC %r
+# MAGIC temp_churn<-as.numeric(df_rl$Churn=="Yes")
+
+# COMMAND ----------
+
+# MAGIC %r
+# MAGIC r<-hist(temp_churn)
+# MAGIC r$counts
+
+# COMMAND ----------
+
+# MAGIC %r
+# MAGIC 
+# MAGIC #How many churned cases and unchurned
+# MAGIC table(df_rl$Churn)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Pyspark
+
+# COMMAND ----------
+
+numCases=df.count()
+numChurned=df.filter(col('Churn')=='Yes').count()
+print(numCases,numChurned,(numCases-numChurned))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Create New Optimized Data Lake for Analytics
+
+# COMMAND ----------
+
+df.repartition(1).write.parquet('/mnt/data-lake/demo-data/churndata')
 
 # COMMAND ----------
 
