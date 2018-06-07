@@ -160,7 +160,7 @@ GROUP BY PaymentMethod
 -- COMMAND ----------
 
 -- MAGIC %py
--- MAGIC display( (spark.sql("SELECT PaymentMethod,count(*) as payment_churn FROM temp_churn_table WHERE Churn='Yes' GROUP BY PaymentMethod"))
+-- MAGIC display( (spark.sql("SELECT PaymentMethod,count(*) as payment_churn FROM temp_churn_table_py WHERE Churn='Yes' GROUP BY PaymentMethod"))
 -- MAGIC        )
 
 -- COMMAND ----------
@@ -177,8 +177,18 @@ GROUP BY PaymentMethod
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC #### Create Temp Table
+
+-- COMMAND ----------
+
 -- MAGIC %r
 -- MAGIC registerTempTable(df_r,'temp_churn_table_r')
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC #### Read Temp Table
 
 -- COMMAND ----------
 
@@ -189,6 +199,17 @@ GROUP BY PaymentMethod
 
 -- MAGIC %r
 -- MAGIC display(temp_churn_df_r)
+
+-- COMMAND ----------
+
+-- MAGIC %md 
+-- MAGIC #### Payment Types of Churned
+
+-- COMMAND ----------
+
+-- MAGIC %r
+-- MAGIC 
+-- MAGIC display(sql("SELECT PaymentMethod,count(*) as payment_churn FROM temp_churn_table_r WHERE Churn='Yes' GROUP BY PaymentMethod" ))
 
 -- COMMAND ----------
 
