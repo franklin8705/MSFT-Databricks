@@ -153,24 +153,14 @@ def run_cv(X,y,clf_class,**kwargs):
 
     # Iterate through folds
     for (train_index, test_index) in kf:
-        X_train = X[train_index] 
-        X_test = X[test_index]
+        X_train = X.as_matrix().astype(np.float)[train_index] 
+        X_test = X.as_matrix().astype(np.float)[list(test_index)]
         y_train = y[train_index]
         # Initialize a classifier with key word arguments
         clf = clf_class(**kwargs)
         clf.fit(X_train,y_train)
         y_pred[test_index] = clf.predict(X_test)
     return y_pred
-
-# COMMAND ----------
-
-t1=KFold(len(y),n_folds=5,shuffle=True)
-t1
-
-# COMMAND ----------
-
-c=[(a,b) for (a,b) in t1]
-max(c[1])
 
 # COMMAND ----------
 
@@ -192,16 +182,8 @@ def accuracy(y_true,y_pred):
 
 # COMMAND ----------
 
-print(y.shape,X.shape,y[[1,2,3,4]])
-
-# COMMAND ----------
-
-run_cv(X,y,RF)
-
-# COMMAND ----------
-
 print("Support vector machines:")
-#print(accuracy(y, run_cv(X,y,DTC)) )
+print(accuracy(y, run_cv(X,y,DTC)) )
 print("Random forest:")
 print(accuracy(y, run_cv(X,y,RF)))
 print("K-nearest-neighbors:")
@@ -209,3 +191,18 @@ print("%.3f" % accuracy(y, run_cv(X,y,KNN)))
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC #### Confusion Matrix
+
+# COMMAND ----------
+
+from sklearn.metrics import confusion_matrix
+
+y = np.array(y)
+class_names = np.unique(y)
+
+confusion_matrices = [
+    ( "Decision Tree", confusion_matrix(y,run_cv(X,y,DTC)) ),
+    ( "Random Forest", confusion_matrix(y,run_cv(X,y,RF)) ),
+    ( "K-Nearest-Neighbors", confusion_matrix(y,run_cv(X,y,KNN)) ),
+]
