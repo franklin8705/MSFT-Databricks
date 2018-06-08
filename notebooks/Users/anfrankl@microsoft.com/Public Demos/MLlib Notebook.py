@@ -113,10 +113,6 @@ churn_feat_space_cat_dummy=pd.get_dummies(churn_feat_space_cat,columns=churn_fea
 
 # COMMAND ----------
 
-pd.DataFrame(churn_feat_space_num_scaled).columns
-
-# COMMAND ----------
-
 scaler=MinMaxScaler()
 churn_feat_space_num_scaled=scaler.fit_transform(churn_feat_space_num)
 
@@ -206,3 +202,12 @@ confusion_matrices = [
     ( "Random Forest", confusion_matrix(y,run_cv(X,y,RF)) ),
     ( "K-Nearest-Neighbors", confusion_matrix(y,run_cv(X,y,KNN)) ),
 ]
+
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### The End
+
+# COMMAND ----------
+
