@@ -1,4 +1,9 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC ### Datascience Team Across Multiple Platforms
+
+# COMMAND ----------
+
 print("Spark Session: ",spark,'\n',
       "SQL Context: ", sqlContext,'\n',
      "DBFS Utilities: ", dbutils, '\n',
